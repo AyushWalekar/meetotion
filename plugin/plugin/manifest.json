@@ -1,0 +1,22 @@
+{
+  "name": "Meetotion",
+  "version": "0.1",
+
+  "browser_action": {
+    "default_title": "Meetotion",
+    "default_popup": "popup.html"
+  },
+  "content_security_policy": "script-src 'self' unsafe-eval",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "<all_urls>",
+    "storage",
+    "desktopCapture",
+    "downloads"
+  ],
+  "manifest_version": 2
+}
