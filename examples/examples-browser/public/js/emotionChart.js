@@ -7,6 +7,8 @@ function createEmotionLineChart(expressionsRecorded) {
     // const angryValues = [];
     // const angryValues = [];
 
+    const startDate = new Date().toDateString();
+
     let timeStampArr = Object.keys(expressionsRecorded);
     for (let i = 0; i < timeStampArr.length; i++) {
         angryValues.push(expressionsRecorded[timeStampArr[i]].angry);
@@ -14,6 +16,11 @@ function createEmotionLineChart(expressionsRecorded) {
         sadValues.push(expressionsRecorded[timeStampArr[i]].sad);
         //TODO: others
     }
+
+    timeStampArr = timeStampArr.map(val => {
+        let d = new Date(parseInt(val));
+        return d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+    })
 
     new Chart(document.getElementById("line-chart"), {
         type: 'line',
@@ -40,7 +47,7 @@ function createEmotionLineChart(expressionsRecorded) {
         options: {
             title: {
                 display: true,
-                text: 'Report'
+                text: 'Meetotion Report: ' + startDate
             }
         }
     });
