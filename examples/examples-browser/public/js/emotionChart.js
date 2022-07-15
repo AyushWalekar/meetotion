@@ -7,6 +7,8 @@ function createEmotionLineChart(expressionsRecorded) {
     // const angryValues = [];
     // const angryValues = [];
 
+    const startDate = new Date().toDateString();
+
     let timeStampArr = Object.keys(expressionsRecorded);
     for (let i = 0; i < timeStampArr.length; i++) {
         angryValues.push(expressionsRecorded[timeStampArr[i]].angry);
@@ -15,6 +17,7 @@ function createEmotionLineChart(expressionsRecorded) {
         //TODO: others
     }
 
+<<<<<<< HEAD
     const avgHappy = 0;
     const avgSad = 0;
     const avgAngry = 0;
@@ -26,6 +29,12 @@ function createEmotionLineChart(expressionsRecorded) {
         //TODO: others
     }
 
+=======
+    timeStampArr = timeStampArr.map(val => {
+        let d = new Date(parseInt(val));
+        return d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+    })
+>>>>>>> refs/remotes/origin/main
 
     new Chart(document.getElementById("line-chart"), {
         type: 'line',
@@ -52,7 +61,7 @@ function createEmotionLineChart(expressionsRecorded) {
         options: {
             title: {
                 display: true,
-                text: 'Report'
+                text: 'Meetotion Report: ' + startDate
             }
         }
     });
