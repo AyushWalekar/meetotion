@@ -41,15 +41,23 @@
       <!-- check boxes -->
 
       <!-- fps_meter -->
-      <div id="fps_meter" class="row side-by-side">
+      <!-- <div id="fps_meter" class="row side-by-side">
         <div>
           <label for="time">Time:</label>
           <input disabled value="-" id="time" type="text" class="bold">
           <label for="fps">Estimated Fps:</label>
           <input disabled value="-" id="fps" type="text" class="bold">
         </div>
-      </div>
+      </div> -->
       <!-- fps_meter -->
+
+      <!-- no of frames recorded -->
+      <div id="dataPoint_meter" class="row side-by-side">
+        <div>
+          <label for="noOfDataPoints">No. of data points:</label>
+          <input disabled value="-" id="noOfDataPoints" type="text" class="bold">
+        </div>
+      </div>
 
     </div>
 
@@ -83,12 +91,12 @@
         <div class="row input-field" style="margin-right: 20px;">
           <select id="inputSize">
             <option value="" disabled selected>Input Size:</option>
-            <option value="128">128 x 128</option>
+            <!-- <option value="128">128 x 128</option>
             <option value="160">160 x 160</option>
             <option value="224">224 x 224</option>
             <option value="320">320 x 320</option>
             <option value="416">416 x 416</option>
-            <option value="512">512 x 512</option>
+            <option value="512">512 x 512</option> -->
             <option value="608">608 x 608</option>
           </select>
           <label>Input Size</label>
@@ -110,6 +118,14 @@
           <i class="material-icons left">+</i>
         </button>
       </div>
+      <div>
+        <button
+        class="waves-effect waves-light btn"
+        onclick="onGenerateResultClick()"
+        >
+        <i class="material-icons left">Generate Result</i>
+      </button>
+      </div>
     </span>
     <!-- tiny_face_detector_controls -->
 
@@ -118,6 +134,7 @@
   <script>
     let forwardTimes = []
     let withBoxes = true
+    let expressionsRecorded = {}
 
     function onChangeHideBoundingBoxes(e) {
       withBoxes = !$(e.target).prop('checked')
@@ -125,9 +142,10 @@
 
     function updateTimeStats(timeInMs) {
       forwardTimes = [timeInMs].concat(forwardTimes).slice(0, 30)
-      const avgTimeInMs = forwardTimes.reduce((total, t) => total + t) / forwardTimes.length
-      $('#time').val(`${Math.round(avgTimeInMs)} ms`)
-      $('#fps').val(`${faceapi.utils.round(1000 / avgTimeInMs)}`)
+      // const avgTimeInMs = forwardTimes.reduce((total, t) => total + t) / forwardTimes.length
+      // $('#time').val(`${Math.round(avgTimeInMs)} ms`)
+      // $('#fps').val(`${faceapi.utils.round(1000 / avgTimeInMs)}`)
+      $('#noOfDataPoints').val(`${Object.keys(expressionsRecorded).length}`)
     }
 
     async function onPlay() {
@@ -155,10 +173,8 @@
           faceapi.draw.drawDetections(canvas, resizedResult)
         }
         faceapi.draw.drawFaceExpressions(canvas, resizedResult, minConfidence)
-        //Store our result to mongo - or log the result .. time vs result
-        //End of screen share - generate report
+        expressionsRecorded[ts] = JSON.parse(JSON.stringify(result.expressions));
       }
-
       setTimeout(() => onPlay())
     }
 
@@ -166,7 +182,7 @@
       // load face detection and face expression recognition models
       await changeFaceDetector(TINY_FACE_DETECTOR)
       await faceapi.loadFaceExpressionModel('/')
-      changeInputSize(224)
+      changeInputSize(608)
 
       // try to access users webcam and stream the images
       // to the video element
@@ -176,6 +192,11 @@
     }
 
     function updateResults() {}
+
+    function onGenerateResultClick(){
+      alert(JSON.stringify(expressionsRecorded));
+      //TODO: generate a chart for timeVsExpressions
+    }
 
     $(document).ready(function() {
       renderNavBar('#navbar', 'webcam_face_expression_recognition')
