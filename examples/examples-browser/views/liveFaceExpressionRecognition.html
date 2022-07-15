@@ -32,94 +32,27 @@
 
     <div class="row side-by-side">
 
-      <!-- face_detector_selection_control -->
-      <div id="face_detector_selection_control" class="row input-field" style="margin-right: 20px;">
-        <select id="selectFaceDetector">
-          <option value="ssd_mobilenetv1">SSD Mobilenet V1</option>
-          <option value="tiny_face_detector">Tiny Face Detector</option>
-        </select>
-        <label>Select Face Detector</label>
-      </div>
-      <!-- face_detector_selection_control -->
-
-      <!-- check boxes -->
-      <div class="row" style="width: 220px;">
-        <input type="checkbox" id="hideBoundingBoxesCheckbox" onchange="onChangeHideBoundingBoxes(event)" />
-        <label for="hideBoundingBoxesCheckbox">Hide Bounding Boxes</label>
-      </div>
-      <!-- check boxes -->
-
-      <!-- fps_meter -->
-      <!-- <div id="fps_meter" class="row side-by-side">
-        <div>
-          <label for="time">Time:</label>
-          <input disabled value="-" id="time" type="text" class="bold">
-          <label for="fps">Estimated Fps:</label>
-          <input disabled value="-" id="fps" type="text" class="bold">
-        </div>
-      </div> -->
-      <!-- fps_meter -->
-
       <!-- no of frames recorded -->
       <div id="dataPoint_meter" class="row side-by-side">
         <div>
           <label for="noOfDataPoints">No. of data points:</label>
           <input disabled value="-" id="noOfDataPoints" type="text" class="bold">
         </div>
+        <div>
+          <label for="noOfDataPoints">No. of detected faces:</label>
+          <input disabled value="-" id="nofOfDetectedFaces" type="text" class="bold">
+        </div>
       </div>
 
     </div>
 
-
-    <!-- ssd_mobilenetv1_controls -->
-    <span id="ssd_mobilenetv1_controls">
-      <div class="row side-by-side">
-        <div class="row">
-          <label for="minConfidence">Min Confidence:</label>
-          <input disabled value="0.5" id="minConfidence" type="text" class="bold">
-        </div>
-        <button class="waves-effect waves-light btn" onclick="onDecreaseMinConfidence()">
-          <i class="material-icons left">-</i>
-        </button>
-        <button class="waves-effect waves-light btn" onclick="onIncreaseMinConfidence()">
-          <i class="material-icons left">+</i>
-        </button>
-      </div>
-    </span>
-    <!-- ssd_mobilenetv1_controls -->
-
     <!-- tiny_face_detector_controls -->
     <span id="tiny_face_detector_controls">
-      <div class="row side-by-side">
-        <div class="row input-field" style="margin-right: 20px;">
-          <select id="inputSize">
-            <option value="" disabled selected>Input Size:</option>
-            <!-- <option value="128">128 x 128</option>
-            <option value="160">160 x 160</option>
-            <option value="224">224 x 224</option>
-            <option value="320">320 x 320</option>
-            <option value="416">416 x 416</option>
-            <option value="512">512 x 512</option> -->
-            <option value="608">608 x 608</option>
-          </select>
-          <label>Input Size</label>
-        </div>
-        <div class="row">
-          <label for="scoreThreshold">Score Threshold:</label>
-          <input disabled value="0.5" id="scoreThreshold" type="text" class="bold">
-        </div>
-        <button class="waves-effect waves-light btn" onclick="onDecreaseScoreThreshold()">
-          <i class="material-icons left">-</i>
-        </button>
-        <button class="waves-effect waves-light btn" onclick="onIncreaseScoreThreshold()">
-          <i class="material-icons left">+</i>
-        </button>
-      </div>
       <div>
         <button class="waves-effect waves-light btn" onclick="onGenerateResultClick()">
           <i class="material-icons left">Generate Result</i>
         </button>
-        <input type="checkbox" id="liveChart" onclick="onLiveChartToggle(event)"/>
+        <input type="checkbox" id="liveChart" onclick="onLiveChartToggle(event)" />
         <label for="liveChart">liveChart</label>
       </div>
       <form>
@@ -140,15 +73,17 @@
         </div>
       </form>
 
-      <div>
-        <button class="waves-effect waves-light btn" onclick="onGenerateSummaryClick()">
-          <i class="material-icons left">Generate Summary</i>
-        </button>
-      </div>
-      <div>
-        <button class="waves-effect waves-light btn" onclick="onResetDataClick()">
-          <i class="material-icons left">Reset data</i>
-        </button>
+      <div id="dataPoint_meter" class="row side-by-side">
+        <div>
+          <button class="waves-effect waves-light btn" onclick="onGenerateSummaryClick()">
+            <i class="material-icons left">Generate Summary</i>
+          </button>
+        </div>
+        <div>
+          <button class="waves-effect waves-light btn" onclick="onResetDataClick()">
+            <i class="material-icons left">Reset data</i>
+          </button>
+        </div>
       </div>
     </span>
     <!-- tiny_face_detector_controls -->
@@ -179,9 +114,6 @@
 
   function updateTimeStats(timeInMs) {
     forwardTimes = [timeInMs].concat(forwardTimes).slice(0, 30)
-    // const avgTimeInMs = forwardTimes.reduce((total, t) => total + t) / forwardTimes.length
-    // $('#time').val(`${Math.round(avgTimeInMs)} ms`)
-    // $('#fps').val(`${faceapi.utils.round(1000 / avgTimeInMs)}`)
     $('#noOfDataPoints').val(`${Object.keys(expressionsRecorded).length}`)
   }
 
@@ -201,6 +133,7 @@
     updateTimeStats(Date.now() - ts)
 
     if (result) {
+      $('#nofOfDetectedFaces').val(`${result.length}`)
       const canvas = $('#overlay').get(0)
       const dims = faceapi.matchDimensions(canvas, videoEl, true)
 
@@ -211,6 +144,7 @@
       }
       faceapi.draw.drawFaceExpressions(canvas, resizedResult, minConfidence)
 
+      //TODO: put all emotions in an array for cleaner code
       var angry = 0;
       var happy = 0;
       var sad = 0;
@@ -235,6 +169,29 @@
       fearful = fearful / result.length;
       neutral = neutral / result.length;
       surprised = surprised / result.length;
+
+      // var threshold = $('#scoreThreshold').val(threshold);
+      // if(angry < threshold){
+      //   angry = 0;
+      // }
+      // if(happy < threshold){
+      //   happy = 0;
+      // }
+      // if(sad < threshold){
+      //   sad = 0;
+      // }
+      // if(disgusted < threshold){
+      //   disgusted = 0;
+      // }
+      // if(fearful < threshold){
+      //   fearful = 0;
+      // }
+      // if(surprised < threshold){
+      //   surprised = 0;
+      // }
+      // if(neutral < threshold){
+      //   neutral = 0;
+      // }
 
       expressionsRecorded[ts] = {
         angry: angry,
@@ -274,15 +231,15 @@
     createEmotionPieChart(expressionsRecorded);
   }
 
-  function onResetDataClick(){
+  function onResetDataClick() {
     expressionsRecorded = {};
   }
 
-  function onLiveChartToggle(e){
+  function onLiveChartToggle(e) {
     updateLiveChart = $(e.target).prop('checked')
-    if(updateLiveChart){
-      liveChartInterval = setInterval(()=> onGenerateResultClick(), 1000);
-    }else{
+    if (updateLiveChart) {
+      liveChartInterval = setInterval(() => onGenerateResultClick(), 1000);
+    } else {
       clearInterval(liveChartInterval);
       liveChartInterval = null;
     }
