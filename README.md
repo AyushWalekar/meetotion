@@ -4,7 +4,7 @@ During a video meeting, specially when there are many people to track, have you 
 
 But we've still got a solution for that. Try meetotion.
 
-Meeotion is a web app built with face-api implemented on top of tensorflow.js core.
+Meetotion is a web app built with face-api implemented on top of tensorflow.js core.
 
 Features:
 
