@@ -18,9 +18,10 @@
 </head>
 
 <body>
+  
   <div id="navbar"></div>
   <div class="center-content page-container">
-
+    <h3>Meetotion</h3>
     <div class="progress" id="loader">
       <div class="indeterminate"></div>
     </div>
@@ -119,6 +120,24 @@
           <i class="material-icons left">Generate Result</i>
         </button>
       </div>
+
+      <form>
+        <div class="row">
+          <input type="checkbox" id="happy"   onchange="onChartOptionChange(event)"/>
+          <label for="happy">Happy</label>
+          <input type="checkbox" id="sad"  onchange="onChartOptionChange(event)"/>
+          <label for="sad">Sad </label>
+          <input type="checkbox" id="angry"  onchange="onChartOptionChange(event)"/>
+          <label for="angry">Angry</label>
+
+          <input type="checkbox" id="surprised"   onchange="onChartOptionChange(event)"/>
+          <label for="surprised">surprised</label>
+          <input type="checkbox" id="neutral"  onchange="onChartOptionChange(event)"/>
+          <label for="neutral">neutral </label>
+          <input type="checkbox" id="fearful"  onchange="onChartOptionChange(event)"/>
+          <label for="fearful">fearful</label>
+        </div>
+      </form>
     </span>
     <!-- tiny_face_detector_controls -->
 
@@ -134,6 +153,10 @@
 
   function onChangeHideBoundingBoxes(e) {
     withBoxes = !$(e.target).prop('checked')
+  }
+
+  function onChartOptionChange(e){
+    // alert('clicked');
   }
 
   function updateTimeStats(timeInMs) {
