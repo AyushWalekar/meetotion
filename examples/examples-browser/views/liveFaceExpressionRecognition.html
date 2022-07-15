@@ -18,7 +18,7 @@
 </head>
 
 <body>
-  
+
   <div id="navbar"></div>
   <div class="center-content page-container">
     <h3>Meetotion</h3>
@@ -119,49 +119,61 @@
         <button class="waves-effect waves-light btn" onclick="onGenerateResultClick()">
           <i class="material-icons left">Generate Result</i>
         </button>
+        <input type="checkbox" id="liveChart" onclick="onLiveChartToggle(event)"/>
+        <label for="liveChart">liveChart</label>
       </div>
-
       <form>
         <div class="row">
-          <input type="checkbox" id="happy"   onchange="onChartOptionChange(event)"/>
+          <input type="checkbox" id="happy" />
           <label for="happy">Happy</label>
-          <input type="checkbox" id="sad"  onchange="onChartOptionChange(event)"/>
+          <input type="checkbox" id="sad" />
           <label for="sad">Sad </label>
-          <input type="checkbox" id="angry"  onchange="onChartOptionChange(event)"/>
+          <input type="checkbox" id="angry" />
           <label for="angry">Angry</label>
 
-          <input type="checkbox" id="surprised"   onchange="onChartOptionChange(event)"/>
+          <input type="checkbox" id="surprised" />
           <label for="surprised">surprised</label>
-          <input type="checkbox" id="neutral"  onchange="onChartOptionChange(event)"/>
+          <input type="checkbox" id="neutral" />
           <label for="neutral">neutral </label>
-          <input type="checkbox" id="fearful"  onchange="onChartOptionChange(event)"/>
+          <input type="checkbox" id="fearful" />
           <label for="fearful">fearful</label>
         </div>
       </form>
+
+      <div>
+        <button class="waves-effect waves-light btn" onclick="onGenerateSummaryClick()">
+          <i class="material-icons left">Generate Summary</i>
+        </button>
+      </div>
+      <div>
+        <button class="waves-effect waves-light btn" onclick="onResetDataClick()">
+          <i class="material-icons left">Reset data</i>
+        </button>
+      </div>
     </span>
     <!-- tiny_face_detector_controls -->
 
-<<<<<<< HEAD
-    <canvas id="line-chart" width="200px" height="200px"></canvas>
-
-    <canvas id="pie-chart" width="800" height="450"></canvas>
-=======
     <div class="container">
       <canvas id="line-chart" width="800" height="450"></canvas>
-  </div>
->>>>>>> refs/remotes/origin/main
+    </div>
+    <div class="container">
+      <canvas id="pie-chart" width="800" height="450"></canvas>
+    </div>
+
 </body>
 
 <script>
   let forwardTimes = []
   let withBoxes = true
   let expressionsRecorded = {}
+  let liveChartInterval = null;
+  let updateLiveChart = false;
 
   function onChangeHideBoundingBoxes(e) {
     withBoxes = !$(e.target).prop('checked')
   }
 
-  function onChartOptionChange(e){
+  function onChartOptionChange(e) {
     // alert('clicked');
   }
 
@@ -255,6 +267,25 @@
   function onGenerateResultClick() {
     // alert(JSON.stringify(expressionsRecorded));
     createEmotionLineChart(expressionsRecorded);
+  }
+
+  function onGenerateSummaryClick() {
+    // alert(JSON.stringify(expressionsRecorded));
+    createEmotionPieChart(expressionsRecorded);
+  }
+
+  function onResetDataClick(){
+    expressionsRecorded = {};
+  }
+
+  function onLiveChartToggle(e){
+    updateLiveChart = $(e.target).prop('checked')
+    if(updateLiveChart){
+      liveChartInterval = setInterval(()=> onGenerateResultClick(), 1000);
+    }else{
+      clearInterval(liveChartInterval);
+      liveChartInterval = null;
+    }
   }
 
   $(document).ready(function () {

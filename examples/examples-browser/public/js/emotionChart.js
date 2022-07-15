@@ -18,24 +18,10 @@ function createEmotionLineChart(expressionsRecorded) {
         fearfulValues.push(expressionsRecorded[timeStampArr[i]].fearful);
     }
 
-<<<<<<< HEAD
-    const avgHappy = 0;
-    const avgSad = 0;
-    const avgAngry = 0;
-
-    for (let i = 0; i < timeStampArr.length; i++) {
-        avgHappy += expressionsRecorded[timeStampArr[i]].happy;
-        avgSad += expressionsRecorded[timeStampArr[i]].sad;
-        avgAngry += expressionsRecorded[timeStampArr[i]].sad;
-        //TODO: others
-    }
-
-=======
     timeStampArr = timeStampArr.map(val => {
         let d = new Date(parseInt(val));
         return d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
     })
->>>>>>> refs/remotes/origin/main
 
     const dataset = [];
     if (document.getElementById('happy').checked) {
@@ -107,35 +93,45 @@ function createEmotionLineChart(expressionsRecorded) {
                         max: 1
                     }
                 }]
+            },
+            animation: {
+                duration: 0
             }
         }
     });
-
-
-
-
-new Chart(document.getElementById("pie-chart"), {
-    type: 'pie',
-    data: {
-      labels: ["Happy","Sad","Angry"],
-      datasets: [{
-        data: [avgHappy,avgSad,avgAngry],
-        label: "happy",
-        backgroundColor: ["#3e95cd", "#8e5ea2","#3cba9f","#e8c3b9","#c45850"],
-        
-    }
-    ]
-    },
-    options: {
-      title: {
-        display: true,
-        text: 'Pie Chart'
-      }
-    }
-});
-
 }
 
-function createEmotionPieChart(data) {
-    //TODO:
+function createEmotionPieChart(expressionsRecorded) {
+    var angryValues = 0;
+    var happyValues = 0;
+    var sadValues = 0;
+    var neutalValues = 0;
+    var surprisedValues = 0;
+    var fearfulValues = 0;
+    let timeStampArr = Object.keys(expressionsRecorded);
+    for (let i = 0; i < timeStampArr.length; i++) {
+        angryValues += expressionsRecorded[timeStampArr[i]].angry;
+        happyValues += expressionsRecorded[timeStampArr[i]].happy;
+        sadValues += expressionsRecorded[timeStampArr[i]].sad;
+        neutalValues += expressionsRecorded[timeStampArr[i]].neutal;
+        surprisedValues += expressionsRecorded[timeStampArr[i]].surprised;
+        fearfulValues += expressionsRecorded[timeStampArr[i]].fearful;
+    }
+    new Chart(document.getElementById("pie-chart"), {
+        type: 'pie',
+        data: {
+            labels: ["Angry", "Happy", "Sad", "Neutral", "Surprised", "Fearful"],
+            datasets: [{
+                label: "Summary",
+                backgroundColor: ["#3e95cd", "#8e5ea2", "#3cba9f", "#e8c3b9", "#c45850"],
+                data: [angryValues, happyValues, sadValues, neutalValues, fearfulValues]
+            }]
+        },
+        options: {
+            title: {
+                display: true,
+                text: 'Summary of the Meet'
+            }
+        }
+    });
 }
