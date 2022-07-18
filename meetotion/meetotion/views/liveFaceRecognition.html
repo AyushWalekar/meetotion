@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script src="face-api.js"></script>
+  <script src="js/commons.js"></script>
+  <script src="js/faceDetectionControls.js"></script>
+  <script src="js/faceRcognitionHelper.js"></script>
+  <script src="js/emotionChart.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.css">
+  <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta http-equiv="X-UA-Comatible" content="ie-edge">
+  <title>Meetotion</title>
+</head>
+
+<body>
+
+  <div id="navbar"></div>
+  <div class="center-content page-container">
+    <h3>Meetotion</h3>
+    <div class="progress" id="loader">
+      <div class="indeterminate"></div>
+    </div>
+    <div style="position: relative" class="margin">
+      <video onloadedmetadata="onPlay(this)" id="inputVideo" autoplay muted playsinline></video>
+      <canvas id="overlay" />
+    </div>
+
+    <div class="row side-by-side">
+
+      <!-- no of frames recorded -->
+      <div id="dataPoint_meter" class="row side-by-side">
+        <div>
+          <label for="noOfDataPoints">No. of detected faces:</label>
+          <input disabled value="-" id="nofOfDetectedFaces" type="text" class="bold">
+        </div>
+        <div>
+          <label for="listOfRecognizedFaces">Recognized faces:</label>
+          <input disabled value="-" id="listOfRecognizedFaces" type="text" class="bold">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- tiny_face_detector_controls -->
+    <span id="tiny_face_detector_controls">
+      <div>
+        <button class="waves-effect waves-light btn" onclick="onGenerateResultClick()">
+          <i class="material-icons left">Find Team B</i>
+        </button>
+      </div>
+    </span>
+    <!-- tiny_face_detector_controls -->
+</body>
+
+<script>
+  let forwardTimes = []
+  let withBoxes = true
+  let expressionsRecorded = {}
+  let liveChartInterval = null;
+  let updateLiveChart = false;
+  let faceMatcher = null
+
+  function onChangeHideBoundingBoxes(e) {
+    withBoxes = !$(e.target).prop('checked')
+  }
+
+  function updateTimeStats(timeInMs) {
+    forwardTimes = [timeInMs].concat(forwardTimes).slice(0, 30)
+  }
+
+  async function onPlay() {
+    const videoEl = $('#inputVideo').get(0)
+
+    if (videoEl.paused || videoEl.ended || !isFaceDetectionModelLoaded())
+      return setTimeout(() => onPlay())
+
+    const options = getFaceDetectorOptions()
+
+    const ts = Date.now()
+
+    const result = await faceapi.detectAllFaces(videoEl, options).withFaceLandmarks()
+      .withFaceDescriptors()
+
+    updateTimeStats(Date.now() - ts)
+
+    if (result) {
+      $('#nofOfDetectedFaces').val(`${result.length}`)
+      const canvas = $('#overlay').get(0)
+      const dims = faceapi.matchDimensions(canvas, videoEl, true)
+
+      const resizedResult = faceapi.resizeResults(result, dims)
+
+      const minConfidence = 0.05
+      if (withBoxes) {
+        faceapi.draw.drawDetections(canvas, resizedResult)
+      }
+      // faceapi.draw.drawFaceExpressions(canvas, resizedResult, minConfidence)
+
+      let listOfRecognizedFaces = [];
+      resizedResult.forEach(({ detection, descriptor }) => {
+        const match = faceMatcher.findBestMatch(descriptor)
+        const label = match.toString();
+        const options = { label }
+        const drawBox = new faceapi.draw.DrawBox(detection.box, options)
+        drawBox.draw(canvas)
+        listOfRecognizedFaces.push(match._label);
+      })
+      $('#listOfRecognizedFaces').val(`${JSON.stringify(listOfRecognizedFaces.filter(val => val != 'unknown'))}`)
+    }
+
+    setTimeout(() => onPlay())
+  }
+
+  async function run() {
+    // load face detection and face expression recognition models
+    await changeFaceDetector(TINY_FACE_DETECTOR)
+    // await faceapi.loadFaceExpressionModel('/')
+    await faceapi.loadFaceLandmarkModel('/')
+    await faceapi.loadFaceRecognitionModel('/')
+    changeInputSize(608)
+
+    faceMatcher = await createFaceMatcher(8)
+
+    // try to access users webcam and stream the images
+    // to the video element
+    const stream = await navigator.mediaDevices.getDisplayMedia({ video: {} })
+    const videoEl = $('#inputVideo').get(0)
+    videoEl.srcObject = stream
+  }
+
+  function updateResults() { }
+
+  function onGenerateResultClick() {
+    onPlay();
+  }
+
+  $(document).ready(function () {
+    renderNavBar('#navbar', 'webcam_face_expression_recognition')
+    initFaceDetectionControls()
+    run()
+  })
+</script>
+</body>
+
+</html>

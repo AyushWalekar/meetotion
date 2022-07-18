@@ -16,6 +16,8 @@ app.use(express.static(path.join(__dirname, '../../dist')))
 
 // app.get('/', (req, res) => res.redirect('/face_detection'))
 app.get('/', (req, res) => res.sendFile(path.join(viewsDir, 'liveFaceExpressionRecognition.html')))
+app.get('/v2', (req, res) => res.sendFile(path.join(viewsDir, 'liveFaceDetectionAndExpressionRecognition.html')))
+app.get('/teamIntro', (req, res) => res.sendFile(path.join(viewsDir, 'liveFaceRecognition.html')))
 
 app.post('/store-emotions', async (req, res) => {
   const { emotions } = req.body

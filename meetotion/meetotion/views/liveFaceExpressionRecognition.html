@@ -170,6 +170,28 @@
       neutral = neutral / result.length;
       surprised = surprised / result.length;
 
+      if (angry === NaN) {
+        angry = 0;
+      }
+      if (happy === NaN) {
+        happy = 0;
+      }
+      if (sad === NaN) {
+        sad = 0;
+      }
+      if (disgusted === NaN) {
+        disgusted = 0;
+      }
+      if (fearful === NaN) {
+        fearful = 0;
+      }
+      if (neutral === NaN) {
+        neutral = 0;
+      }
+      if (surprised === NaN) {
+        surprised = 0;
+      }
+
       // var threshold = $('#scoreThreshold').val(threshold);
       // if(angry < threshold){
       //   angry = 0;

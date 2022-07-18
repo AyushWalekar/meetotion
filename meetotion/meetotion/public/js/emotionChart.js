@@ -110,12 +110,24 @@ function createEmotionPieChart(expressionsRecorded) {
     var fearfulValues = 0;
     let timeStampArr = Object.keys(expressionsRecorded);
     for (let i = 0; i < timeStampArr.length; i++) {
-        angryValues += expressionsRecorded[timeStampArr[i]].angry;
-        happyValues += expressionsRecorded[timeStampArr[i]].happy;
-        sadValues += expressionsRecorded[timeStampArr[i]].sad;
-        neutalValues += expressionsRecorded[timeStampArr[i]].neutal;
-        surprisedValues += expressionsRecorded[timeStampArr[i]].surprised;
-        fearfulValues += expressionsRecorded[timeStampArr[i]].fearful;
+        if (expressionsRecorded[timeStampArr[i]].angry !== NaN) {
+            angryValues += expressionsRecorded[timeStampArr[i]].angry;
+        }
+        if (expressionsRecorded[timeStampArr[i]].happy !== NaN) {
+            happyValues += expressionsRecorded[timeStampArr[i]].happy;
+        }
+        if (expressionsRecorded[timeStampArr[i]].sad !== NaN) {
+            sadValues += expressionsRecorded[timeStampArr[i]].sad;
+        }
+        if (expressionsRecorded[timeStampArr[i]].neutal !== NaN) {
+            neutalValues += expressionsRecorded[timeStampArr[i]].neutal;
+        }
+        if (expressionsRecorded[timeStampArr[i]].surprised !== NaN) {
+            surprisedValues += expressionsRecorded[timeStampArr[i]].surprised;
+        }
+        if (expressionsRecorded[timeStampArr[i]].fearful !== NaN) {
+            fearfulValues += expressionsRecorded[timeStampArr[i]].fearful;
+        }
     }
     new Chart(document.getElementById("pie-chart"), {
         type: 'pie',
@@ -123,7 +135,7 @@ function createEmotionPieChart(expressionsRecorded) {
             labels: ["Angry", "Happy", "Sad", "Neutral", "Surprised", "Fearful"],
             datasets: [{
                 label: "Summary",
-                backgroundColor: ["#3e95cd", "#8e5ea2", "#3cba9f", "#e8c3b9", "#c45850"],
+                backgroundColor: ["#C45850", "#F8DE7E", "#3e95cd", "#E8C3B9", "#3e95cd", "##8E5EA2"],
                 data: [angryValues, happyValues, sadValues, neutalValues, fearfulValues]
             }]
         },

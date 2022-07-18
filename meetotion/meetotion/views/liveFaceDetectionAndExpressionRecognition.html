@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script src="face-api.js"></script>
+  <script src="js/commons.js"></script>
+  <script src="js/faceDetectionControls.js"></script>
+  <script src="js/faceRcognitionHelper.js"></script>
+  <script src="js/emotionChart.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.css">
+  <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta http-equiv="X-UA-Comatible" content="ie-edge">
+  <title>Meetotion</title>
+</head>
+
+<body>
+
+  <div id="navbar"></div>
+  <div class="center-content page-container">
+    <h3>Meetotion</h3>
+    <div class="progress" id="loader">
+      <div class="indeterminate"></div>
+    </div>
+    <div style="position: relative" class="margin">
+      <video onloadedmetadata="onPlay(this)" id="inputVideo" autoplay muted playsinline></video>
+      <canvas id="overlay" />
+    </div>
+
+    <div class="row side-by-side">
+
+      <!-- no of frames recorded -->
+      <div id="dataPoint_meter" class="row side-by-side">
+        <div>
+          <label for="noOfDataPoints">No. of data points:</label>
+          <input disabled value="-" id="noOfDataPoints" type="text" class="bold">
+        </div>
+        <div>
+          <label for="noOfDataPoints">No. of detected faces:</label>
+          <input disabled value="-" id="nofOfDetectedFaces" type="text" class="bold">
+        </div>
+        <div>
+          <label for="listOfRecognizedFaces">Recognized faces:</label>
+          <input disabled value="-" id="listOfRecognizedFaces" type="text" class="bold">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- tiny_face_detector_controls -->
+    <span id="tiny_face_detector_controls">
+      <div>
+        <button class="waves-effect waves-light btn" onclick="onGenerateResultClick()">
+          <i class="material-icons left">Generate Result</i>
+        </button>
+        <input type="checkbox" id="liveChart" onclick="onLiveChartToggle(event)" />
+        <label for="liveChart">liveChart</label>
+      </div>
+      <form>
+        <div class="row">
+          <input type="checkbox" id="happy" />
+          <label for="happy">Happy</label>
+          <input type="checkbox" id="sad" />
+          <label for="sad">Sad </label>
+          <input type="checkbox" id="angry" />
+          <label for="angry">Angry</label>
+
+          <input type="checkbox" id="surprised" />
+          <label for="surprised">surprised</label>
+          <input type="checkbox" id="neutral" />
+          <label for="neutral">neutral </label>
+          <input type="checkbox" id="fearful" />
+          <label for="fearful">fearful</label>
+        </div>
+      </form>
+
+      <div id="dataPoint_meter" class="row side-by-side">
+        <div>
+          <button class="waves-effect waves-light btn" onclick="onGenerateSummaryClick()">
+            <i class="material-icons left">Generate Summary</i>
+          </button>
+        </div>
+        <div>
+          <button class="waves-effect waves-light btn" onclick="onResetDataClick()">
+            <i class="material-icons left">Reset data</i>
+          </button>
+        </div>
+      </div>
+    </span>
+    <!-- tiny_face_detector_controls -->
+
+    <div class="container">
+      <canvas id="line-chart" width="800" height="450"></canvas>
+    </div>
+    <div class="container">
+      <canvas id="pie-chart" width="800" height="450"></canvas>
+    </div>
+
+</body>
+
+<script>
+  let forwardTimes = []
+  let withBoxes = true
+  let expressionsRecorded = {}
+  let liveChartInterval = null;
+  let updateLiveChart = false;
+  let faceMatcher = null
+
+  function onChangeHideBoundingBoxes(e) {
+    withBoxes = !$(e.target).prop('checked')
+  }
+
+  function onChartOptionChange(e) {
+    // alert('clicked');
+  }
+
+  function updateTimeStats(timeInMs) {
+    forwardTimes = [timeInMs].concat(forwardTimes).slice(0, 30)
+    $('#noOfDataPoints').val(`${Object.keys(expressionsRecorded).length}`)
+  }
+
+  function drawFaceRecognitionResults(resizedResults, canvas) {
+    // const canvas = $('#overlay').get(0)
+    // const dims = faceapi.matchDimensions(canvas, videoEl, true)
+
+    // // resize detection and landmarks in case displayed image is smaller than
+    // // original size
+    // const resizedResults = faceapi.resizeResults(results, dims)
+
+    // resizedResults.forEach(({ detection, descriptor }) => {
+    //   const label = faceMatcher.findBestMatch(descriptor).toString()
+    //   const options = { label }
+    //   const drawBox = new faceapi.draw.DrawBox(detection.box, options)
+    //   drawBox.draw(canvas)
+    // })
+  }
+
+  async function tryFaceDetection(videoEl, options) {
+    const recogResul = await faceapi
+      .detectAllFaces(videoEl, options)
+      .withFaceLandmarks()
+      .withFaceDescriptors()
+
+    drawFaceRecognitionResults(recogResul, videoEl)
+  }
+
+  async function onPlay() {
+    const videoEl = $('#inputVideo').get(0)
+
+    if (videoEl.paused || videoEl.ended || !isFaceDetectionModelLoaded())
+      return setTimeout(() => onPlay())
+
+
+    const options = getFaceDetectorOptions()
+
+    const ts = Date.now()
+
+    const result = await faceapi.detectAllFaces(videoEl, options).withFaceLandmarks()
+      .withFaceDescriptors().withFaceExpressions()
+
+    updateTimeStats(Date.now() - ts)
+
+    if (result) {
+      $('#nofOfDetectedFaces').val(`${result.length}`)
+      const canvas = $('#overlay').get(0)
+      const dims = faceapi.matchDimensions(canvas, videoEl, true)
+
+      const resizedResult = faceapi.resizeResults(result, dims)
+
+      const minConfidence = 0.05
+      if (withBoxes) {
+        faceapi.draw.drawDetections(canvas, resizedResult)
+      }
+      faceapi.draw.drawFaceExpressions(canvas, resizedResult, minConfidence)
+
+      let listOfRecognizedFaces = [];
+      resizedResult.forEach(({ detection, descriptor }) => {
+        const match = faceMatcher.findBestMatch(descriptor)
+        const label = match.toString();
+        const options = { label }
+        const drawBox = new faceapi.draw.DrawBox(detection.box, options)
+        drawBox.draw(canvas)
+        listOfRecognizedFaces.push(match._label);
+      })
+      $('#listOfRecognizedFaces').val(`${JSON.stringify(listOfRecognizedFaces.filter(val => val != 'unknown'))}`)
+
+
+      //TODO: put all emotions in an array for cleaner code
+      var angry = 0;
+      var happy = 0;
+      var sad = 0;
+      var disgusted = 0;
+      var fearful = 0;
+      var neutral = 0;
+      var surprised = 0;
+      for (let i = 0; i < result.length; i++) {
+        angry += result[i].expressions.angry;
+        happy += result[i].expressions.happy;
+        sad += result[i].expressions.sad;
+        disgusted += result[i].expressions.disgusted;
+        fearful += result[i].expressions.fearful;
+        neutral += result[i].expressions.neutral;
+        surprised += result[i].expressions.surprised;
+      }
+
+      angry = angry / result.length;
+      happy = happy / result.length;
+      sad = sad / result.length;
+      disgusted = disgusted / result.length;
+      fearful = fearful / result.length;
+      neutral = neutral / result.length;
+      surprised = surprised / result.length;
+
+      // var threshold = $('#scoreThreshold').val(threshold);
+      // if(angry < threshold){
+      //   angry = 0;
+      // }
+      // if(happy < threshold){
+      //   happy = 0;
+      // }
+      // if(sad < threshold){
+      //   sad = 0;
+      // }
+      // if(disgusted < threshold){
+      //   disgusted = 0;
+      // }
+      // if(fearful < threshold){
+      //   fearful = 0;
+      // }
+      // if(surprised < threshold){
+      //   surprised = 0;
+      // }
+      // if(neutral < threshold){
+      //   neutral = 0;
+      // }
+
+      expressionsRecorded[ts] = {
+        angry: angry,
+        happy: happy,
+        sad: sad,
+        disgusted: disgusted,
+        fearful: fearful,
+        neutral: neutral,
+        surprised: surprised
+      };
+    }
+    setTimeout(() => onPlay())
+  }
+
+  async function run() {
+    // load face detection and face expression recognition models
+    await changeFaceDetector(TINY_FACE_DETECTOR)
+    await faceapi.loadFaceExpressionModel('/')
+    await faceapi.loadFaceLandmarkModel('/')
+    await faceapi.loadFaceRecognitionModel('/')
+    changeInputSize(608)
+
+    faceMatcher = await createFaceMatcher(8)
+
+    // try to access users webcam and stream the images
+    // to the video element
+    const stream = await navigator.mediaDevices.getDisplayMedia({ video: {} })
+    const videoEl = $('#inputVideo').get(0)
+    videoEl.srcObject = stream
+  }
+
+  function updateResults() { }
+
+  function onGenerateResultClick() {
+    // alert(JSON.stringify(expressionsRecorded));
+    createEmotionLineChart(expressionsRecorded);
+  }
+
+  function onGenerateSummaryClick() {
+    // alert(JSON.stringify(expressionsRecorded));
+    createEmotionPieChart(expressionsRecorded);
+  }
+
+  function onResetDataClick() {
+    expressionsRecorded = {};
+  }
+
+  function onLiveChartToggle(e) {
+    updateLiveChart = $(e.target).prop('checked')
+    if (updateLiveChart) {
+      liveChartInterval = setInterval(() => onGenerateResultClick(), 1000);
+    } else {
+      clearInterval(liveChartInterval);
+      liveChartInterval = null;
+    }
+  }
+
+  $(document).ready(function () {
+    renderNavBar('#navbar', 'webcam_face_expression_recognition')
+    initFaceDetectionControls()
+    run()
+  })
+</script>
+</body>
+
+</html>
